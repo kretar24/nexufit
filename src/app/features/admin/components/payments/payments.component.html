@@ -19,7 +19,7 @@
           { key: 'verified', label: 'Verificados' },
           { key: 'rejected', label: 'Rechazados' }
         ]"
-        (click)="filterStatus = status.key; onFilterChange()"
+        (click)="filterStatus === status.key; onFilterChange()"
         class="px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 touch-feedback"
         [class]="filterStatus === status.key 
           ? 'bg-primary-500 text-white' 

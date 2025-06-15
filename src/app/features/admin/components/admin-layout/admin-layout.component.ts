@@ -1,11 +1,14 @@
 import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
 import { User } from '../../../../core/interfaces/user.interface';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-admin-layout',
   templateUrl: './admin-layout.component.html',
+  imports: [CommonModule, FormsModule, RouterModule],
   styleUrls: ['./admin-layout.component.css']
 })
 export class AdminLayoutComponent implements OnInit {

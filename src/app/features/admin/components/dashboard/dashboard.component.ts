@@ -8,11 +8,12 @@ import { Payment } from '../../../../core/interfaces/payment.interface';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
+import { LoadingComponent } from "../../../../shared/components/loading/loading.component";
 
 @Component({
   selector: 'app-dashboard',
   templateUrl: './dashboard.component.html',
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, LoadingComponent],
   styleUrls: ['./dashboard.component.css']
 })
 export class DashboardComponent implements OnInit {
