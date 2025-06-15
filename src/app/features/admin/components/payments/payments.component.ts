@@ -8,11 +8,13 @@ import { User } from '../../../../core/interfaces/user.interface';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
+import { LoadingComponent } from "../../../../shared/components/loading/loading.component";
+import { EmptyStateComponent } from "../../../../shared/components/empty-state/empty-state.component";
 
 @Component({
   selector: 'app-payments',
   templateUrl: './payments.component.html',
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, LoadingComponent, EmptyStateComponent],
   styleUrls: ['./payments.component.css']
 })
 export class PaymentsComponent implements OnInit {

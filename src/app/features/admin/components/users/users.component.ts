@@ -2,10 +2,15 @@ import { Component, OnInit } from '@angular/core';
 import { UserService } from '../../../../core/services/user.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { User } from '../../../../core/interfaces/user.interface';
+import { CommonModule } from '@angular/common';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { EmptyStateComponent } from "../../../../shared/components/empty-state/empty-state.component";
+import { LoadingComponent } from "../../../../shared/components/loading/loading.component";
 
 @Component({
   selector: 'app-users',
   templateUrl: './users.component.html',
+  imports: [FormsModule, ReactiveFormsModule, CommonModule, EmptyStateComponent, LoadingComponent],
   styleUrls: ['./users.component.css']
 })
 export class UsersComponent implements OnInit {

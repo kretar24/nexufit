@@ -4,10 +4,16 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { FitnessClass } from '../../../../core/interfaces/class.interface';
 import { User } from '../../../../core/interfaces/user.interface';
+import { CommonModule } from '@angular/common';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { LoadingComponent } from "../../../../shared/components/loading/loading.component";
+import { EmptyStateComponent } from "../../../../shared/components/empty-state/empty-state.component";
 
 @Component({
   selector: 'app-dashboard',
   templateUrl: './dashboard.component.html',
+  imports: [FormsModule, ReactiveFormsModule, CommonModule, LoadingComponent, EmptyStateComponent],
+  standalone: true,
   styleUrls: ['./dashboard.component.css']
 })
 export class DashboardComponent implements OnInit {

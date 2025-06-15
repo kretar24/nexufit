@@ -1,12 +1,17 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ClassService } from '../../../../core/services/class.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { FitnessClass, CreateClassRequest } from '../../../../core/interfaces/class.interface';
+import { CommonModule } from '@angular/common';
+import { LoadingComponent } from "../../../../shared/components/loading/loading.component";
+import { EmptyStateComponent } from "../../../../shared/components/empty-state/empty-state.component";
 
 @Component({
   selector: 'app-classes',
   templateUrl: './classes.component.html',
+  imports: [FormsModule, ReactiveFormsModule, CommonModule, LoadingComponent, EmptyStateComponent],
+  standalone: true,
   styleUrls: ['./classes.component.css']
 })
 export class ClassesComponent implements OnInit {

@@ -4,10 +4,16 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { Payment } from '../../../../core/interfaces/payment.interface';
 import { User } from '../../../../core/interfaces/user.interface';
+import { CommonModule } from '@angular/common';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { LoadingComponent } from "../../../../shared/components/loading/loading.component";
+import { EmptyStateComponent } from "../../../../shared/components/empty-state/empty-state.component";
 
 @Component({
   selector: 'app-payments',
   templateUrl: './payments.component.html',
+  imports: [FormsModule, ReactiveFormsModule, CommonModule, LoadingComponent, EmptyStateComponent],
+  standalone: true,
   styleUrls: ['./payments.component.css']
 })
 export class PaymentsComponent implements OnInit {
