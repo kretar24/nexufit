@@ -1,0 +1,127 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-secondary-800">Gestión de Pagos</h1>
+      <p class="mt-1 text-sm text-secondary-600">
+        Administra los pagos de los usuarios
+      </p>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="card">
+    <div class="flex flex-wrap gap-2">
+      <button
+        *ngFor="let status of [
+          { key: 'all', label: 'Todos' },
+          { key: 'pending', label: 'Pendientes' },
+          { key: 'verified', label: 'Verificados' },
+          { key: 'rejected', label: 'Rechazados' }
+        ]"
+        (click)="filterStatus = status.key; onFilterChange()"
+        class="px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 touch-feedback"
+        [class]="filterStatus === status.key 
+          ? 'bg-primary-500 text-white' 
+          : 'bg-secondary-100 text-secondary-700 hover:bg-secondary-200'"
+      >
+        {{ status.label }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="flex justify-center py-12">
+    <app-loading message="Cargando pagos..."></app-loading>
+  </div>
+
+  <!-- Payments List -->
+  <div *ngIf="!isLoading" class="space-y-4">
+    <!-- Empty State -->
+    <div *ngIf="filteredPayments.length === 0">
+      <app-empty-state
+        title="No hay pagos"
+        description="No hay pagos que coincidan con los filtros aplicados."
+        icon="payment">
+      </app-empty-state>
+    </div>
+
+    <!-- Payments Grid -->
+    <div *ngIf="filteredPayments.length > 0" class="space-y-4">
+      <div *ngFor="let payment of filteredPayments" class="card hover:shadow-md transition-shadow duration-200">
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+          <!-- Payment Info -->
+          <div class="flex-1">
+            <div class="flex items-center space-x-3 mb-3">
+              <div class="flex-shrink-0">
+                <div class="h-12 w-12 rounded-full bg-primary-100 flex items-center justify-center">
+                  <svg class="h-6 w-6 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                </div>
+              </div>
+              <div>
+                <h3 class="text-lg font-semibold text-secondary-800">
+                  €{{ payment.amount }}
+                </h3>
+                <p class="text-sm text-secondary-600">
+                  {{ getUserName(payment.userId) }}
+                </p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+              <div>
+                <span class="text-secondary-600">Fecha:</span>
+                <span class="ml-2 text-secondary-800">{{ payment.paymentDate | date:'d MMM yyyy, HH:mm':'es' }}</span>
+              </div>
+              <div>
+                <span class="text-secondary-600">Método:</span>
+                <span class="ml-2 text-secondary-800">{{ getMethodText(payment.method) }}</span>
+              </div>
+              <div *ngIf="payment.verificationDate">
+                <span class="text-secondary-600">Verificado:</span>
+                <span class="ml-2 text-secondary-800">{{ payment.verificationDate | date:'d MMM yyyy, HH:mm':'es' }}</span>
+              </div>
+              <div *ngIf="payment.notes">
+                <span class="text-secondary-600">Notas:</span>
+                <span class="ml-2 text-secondary-800">{{ payment.notes }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="mt-4 lg:mt-0 lg:ml-6 flex flex-col items-end space-y-3">
+            <span [ngClass]="getStatusBadgeClass(payment.status)">
+              {{ getStatusText(payment.status) }}
+            </span>
+
+            <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+              <a *ngIf="payment.receiptUrl" 
+                 [href]="payment.receiptUrl" 
+                 target="_blank"
+                 class="text-sm text-primary-600 hover:text-primary-800 underline touch-feedback">
+                Ver comprobante
+              </a>
+
+              <div *ngIf="payment.status === 'pending'" class="flex space-x-2">
+                <button
+                  (click)="verifyPayment(payment)"
+                  class="px-3 py-1 text-sm bg-green-500 hover:bg-green-600 text-white rounded-md transition-colors duration-200 touch-feedback"
+                >
+                  Verificar
+                </button>
+                <button
+                  (click)="rejectPayment(payment)"
+                  class="px-3 py-1 text-sm bg-red-500 hover:bg-red-600 text-white rounded-md transition-colors duration-200 touch-feedback"
+                >
+                  Rechazar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,124 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-secondary-800">Dashboard</h1>
+      <p class="mt-1 text-sm text-secondary-600">
+        Bienvenido, {{ currentUser?.name }}
+      </p>
+    </div>
+    <div class="mt-4 sm:mt-0">
+      <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
+            [ngClass]="{
+              'bg-green-100 text-green-800': currentUser?.paymentStatus === 'paid',
+              'bg-yellow-100 text-yellow-800': currentUser?.paymentStatus === 'pending',
+              'bg-red-100 text-red-800': currentUser?.paymentStatus === 'overdue'
+            }">
+        {{ currentUser?.paymentStatus === 'paid' ? 'Al día' : 
+           currentUser?.paymentStatus === 'pending' ? 'Pago pendiente' : 'Pago vencido' }}
+      </span>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="flex justify-center py-12">
+    <app-loading message="Cargando clases..."></app-loading>
+  </div>
+
+  <!-- Weekly Classes -->
+  <div *ngIf="!isLoading" class="space-y-4">
+    <h2 class="text-lg font-semibold text-secondary-800">Clases de esta semana</h2>
+    
+    <!-- Empty State -->
+    <div *ngIf="weeklyClasses.length === 0">
+      <app-empty-state
+        title="No hay clases programadas"
+        description="No hay clases disponibles para esta semana."
+        icon="calendar">
+      </app-empty-state>
+    </div>
+
+    <!-- Classes Grid -->
+    <div *ngIf="weeklyClasses.length > 0" class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div *ngFor="let class of weeklyClasses" class="card hover:shadow-md transition-shadow duration-200">
+        <div class="flex justify-between items-start mb-3">
+          <div>
+            <h3 class="font-semibold text-secondary-800">{{ class.name }}</h3>
+            <p class="text-sm text-secondary-600">{{ class.instructorName }}</p>
+          </div>
+          <span class="text-xs font-medium px-2 py-1 rounded-full"
+                [ngClass]="{
+                  'bg-green-100 text-green-800': getOccupancyPercentage(class) < 70,
+                  'bg-yellow-100 text-yellow-800': getOccupancyPercentage(class) >= 70 && getOccupancyPercentage(class) < 90,
+                  'bg-red-100 text-red-800': getOccupancyPercentage(class) >= 90
+                }">
+            {{ class.currentCapacity }}/{{ class.maxCapacity }}
+          </span>
+        </div>
+
+        <div class="space-y-2 mb-4">
+          <div class="flex items-center text-sm text-secondary-600">
+            <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            {{ class.date | date:'EEEE, d MMMM':'es' }}
+          </div>
+          <div class="flex items-center text-sm text-secondary-600">
+            <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            {{ class.startTime }} ({{ class.duration }} min)
+          </div>
+        </div>
+
+        <div class="mb-4" *ngIf="class.description">
+          <p class="text-sm text-secondary-600">{{ class.description }}</p>
+        </div>
+
+        <!-- Occupancy Bar -->
+        <div class="mb-4">
+          <div class="flex justify-between text-xs text-secondary-600 mb-1">
+            <span>Ocupación</span>
+            <span [ngClass]="getOccupancyColor(getOccupancyPercentage(class))">
+              {{ getOccupancyPercentage(class) }}%
+            </span>
+          </div>
+          <div class="w-full bg-neutral-200 rounded-full h-2">
+            <div class="h-2 rounded-full transition-all duration-300"
+                 [ngClass]="{
+                   'bg-green-500': getOccupancyPercentage(class) < 70,
+                   'bg-yellow-500': getOccupancyPercentage(class) >= 70 && getOccupancyPercentage(class) < 90,
+                   'bg-red-500': getOccupancyPercentage(class) >= 90
+                 }"
+                 [style.width.%]="getOccupancyPercentage(class)">
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Button -->
+        <div class="flex space-x-2">
+          <button
+            *ngIf="!isUserBooked(class.id) && canBook(class)"
+            (click)="bookClass(class.id)"
+            class="flex-1 btn-primary text-sm py-2 touch-feedback">
+            Reservar
+          </button>
+          
+          <button
+            *ngIf="isUserBooked(class.id)"
+            (click)="cancelBooking(class.id)"
+            class="flex-1 bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 text-sm touch-feedback">
+            Cancelar
+          </button>
+          
+          <button
+            *ngIf="!canBook(class) && !isUserBooked(class.id)"
+            disabled
+            class="flex-1 bg-neutral-300 text-neutral-500 font-medium py-2 px-4 rounded-lg text-sm cursor-not-allowed">
+            Lleno
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

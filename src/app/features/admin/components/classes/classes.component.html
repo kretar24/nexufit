@@ -1,0 +1,253 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-secondary-800">Gestión de Clases</h1>
+      <p class="mt-1 text-sm text-secondary-600">
+        Administra las clases del gimnasio
+      </p>
+    </div>
+    <button
+      (click)="toggleCreateForm()"
+      class="mt-4 sm:mt-0 btn-primary touch-feedback"
+    >
+      {{ showCreateForm ? 'Cancelar' : 'Nueva Clase' }}
+    </button>
+  </div>
+
+  <!-- Create Class Form -->
+  <div *ngIf="showCreateForm" class="card">
+    <h3 class="text-lg font-semibold text-secondary-800 mb-4">Crear Nueva Clase</h3>
+    
+    <form [formGroup]="createClassForm" (ngSubmit)="onSubmit()" class="space-y-4">
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <!-- Name -->
+        <div>
+          <label for="name" class="form-label">Nombre de la clase *</label>
+          <input
+            id="name"
+            type="text"
+            formControlName="name"
+            class="form-input"
+            [class.border-red-500]="name?.invalid && name?.touched"
+            placeholder="CrossFit Matutino"
+          />
+          <div *ngIf="name?.invalid && name?.touched" class="mt-1 text-sm text-red-600">
+            <div *ngIf="name?.errors?.['required']">El nombre es requerido</div>
+            <div *ngIf="name?.errors?.['minlength']">El nombre debe tener al menos 3 caracteres</div>
+          </div>
+        </div>
+
+        <!-- Instructor -->
+        <div>
+          <label for="instructorName" class="form-label">Instructor *</label>
+          <input
+            id="instructorName"
+            type="text"
+            formControlName="instructorName"
+            class="form-input"
+            [class.border-red-500]="instructorName?.invalid && instructorName?.touched"
+            placeholder="Ana Martínez"
+          />
+          <div *ngIf="instructorName?.invalid && instructorName?.touched" class="mt-1 text-sm text-red-600">
+            <div *ngIf="instructorName?.errors?.['required']">El instructor es requerido</div>
+            <div *ngIf="instructorName?.errors?.['minlength']">El nombre debe tener al menos 2 caracteres</div>
+          </div>
+        </div>
+
+        <!-- Date -->
+        <div>
+          <label for="date" class="form-label">Fecha *</label>
+          <input
+            id="date"
+            type="date"
+            formControlName="date"
+            class="form-input"
+            [class.border-red-500]="date?.invalid && date?.touched"
+          />
+          <div *ngIf="date?.invalid && date?.touched" class="mt-1 text-sm text-red-600">
+            <div *ngIf="date?.errors?.['required']">La fecha es requerida</div>
+          </div>
+        </div>
+
+        <!-- Start Time -->
+        <div>
+          <label for="startTime" class="form-label">Hora de inicio *</label>
+          <input
+            id="startTime"
+            type="time"
+            formControlName="startTime"
+            class="form-input"
+            [class.border-red-500]="startTime?.invalid && startTime?.touched"
+          />
+          <div *ngIf="startTime?.invalid && startTime?.touched" class="mt-1 text-sm text-red-600">
+            <div *ngIf="startTime?.errors?.['required']">La hora es requerida</div>
+          </div>
+        </div>
+
+        <!-- Duration -->
+        <div>
+          <label for="duration" class="form-label">Duración (minutos) *</label>
+          <input
+            id="duration"
+            type="number"
+            formControlName="duration"
+            class="form-input"
+            [class.border-red-500]="duration?.invalid && duration?.touched"
+            min="15"
+            max="180"
+          />
+          <div *ngIf="duration?.invalid && duration?.touched" class="mt-1 text-sm text-red-600">
+            <div *ngIf="duration?.errors?.['required']">La duración es requerida</div>
+            <div *ngIf="duration?.errors?.['min']">Mínimo 15 minutos</div>
+            <div *ngIf="duration?.errors?.['max']">Máximo 180 minutos</div>
+          </div>
+        </div>
+
+        <!-- Max Capacity -->
+        <div>
+          <label for="maxCapacity" class="form-label">Capacidad máxima *</label>
+          <input
+            id="maxCapacity"
+            type="number"
+            formControlName="maxCapacity"
+            class="form-input"
+            [class.border-red-500]="maxCapacity?.invalid && maxCapacity?.touched"
+            min="1"
+            max="50"
+          />
+          <div *ngIf="maxCapacity?.invalid && maxCapacity?.touched" class="mt-1 text-sm text-red-600">
+            <div *ngIf="maxCapacity?.errors?.['required']">La capacidad es requerida</div>
+            <div *ngIf="maxCapacity?.errors?.['min']">Mínimo 1 persona</div>
+            <div *ngIf="maxCapacity?.errors?.['max']">Máximo 50 personas</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div>
+        <label for="description" class="form-label">Descripción</label>
+        <textarea
+          id="description"
+          formControlName="description"
+          rows="3"
+          class="form-input"
+          placeholder="Descripción opcional de la clase..."
+        ></textarea>
+      </div>
+
+      <!-- Submit Button -->
+      <div class="flex justify-end space-x-3">
+        <button
+          type="button"
+          (click)="toggleCreateForm()"
+          class="btn-secondary touch-feedback"
+        >
+          Cancelar
+        </button>
+        <button
+          type="submit"
+          [disabled]="createClassForm.invalid || isCreating"
+          class="btn-primary touch-feedback disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <div *ngIf="isCreating" class="flex items-center">
+            <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+            Creando...
+          </div>
+          <span *ngIf="!isCreating">Crear Clase</span>
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="flex justify-center py-12">
+    <app-loading message="Cargando clases..."></app-loading>
+  </div>
+
+  <!-- Classes List -->
+  <div *ngIf="!isLoading" class="space-y-4">
+    <!-- Empty State -->
+    <div *ngIf="classes.length === 0">
+      <app-empty-state
+        title="No hay clases programadas"
+        description="Comienza creando tu primera clase."
+        icon="calendar">
+        <button (click)="toggleCreateForm()" class="btn-primary touch-feedback">
+          Crear Primera Clase
+        </button>
+      </app-empty-state>
+    </div>
+
+    <!-- Classes Grid -->
+    <div *ngIf="classes.length > 0" class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div *ngFor="let class of classes" class="card hover:shadow-md transition-shadow duration-200">
+        <!-- Class Header -->
+        <div class="flex justify-between items-start mb-3">
+          <div>
+            <h3 class="text-lg font-semibold text-secondary-800">{{ class.name }}</h3>
+            <p class="text-sm text-secondary-600">{{ class.instructorName }}</p>
+          </div>
+          <span class="text-xs font-medium px-2 py-1 rounded-full"
+                [ngClass]="{
+                  'bg-green-100 text-green-800': getOccupancyPercentage(class) < 70,
+                  'bg-yellow-100 text-yellow-800': getOccupancyPercentage(class) >= 70 && getOccupancyPercentage(class) < 90,
+                  'bg-red-100 text-red-800': getOccupancyPercentage(class) >= 90
+                }">
+            {{ class.currentCapacity }}/{{ class.maxCapacity }}
+          </span>
+        </div>
+
+        <!-- Class Info -->
+        <div class="space-y-2 mb-4">
+          <div class="flex items-center text-sm text-secondary-600">
+            <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            {{ class.date | date:'EEEE, d MMMM yyyy':'es' }}
+          </div>
+          <div class="flex items-center text-sm text-secondary-600">
+            <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            {{ class.startTime }} ({{ class.duration }} min)
+          </div>
+        </div>
+
+        <div class="mb-4" *ngIf="class.description">
+          <p class="text-sm text-secondary-600">{{ class.description }}</p>
+        </div>
+
+        <!-- Occupancy Bar -->
+        <div class="mb-4">
+          <div class="flex justify-between text-xs text-secondary-600 mb-1">
+            <span>Ocupación</span>
+            <span [ngClass]="getOccupancyColor(getOccupancyPercentage(class))">
+              {{ getOccupancyPercentage(class) }}%
+            </span>
+          </div>
+          <div class="w-full bg-neutral-200 rounded-full h-2">
+            <div class="h-2 rounded-full transition-all duration-300"
+                 [ngClass]="{
+                   'bg-green-500': getOccupancyPercentage(class) < 70,
+                   'bg-yellow-500': getOccupancyPercentage(class) >= 70 && getOccupancyPercentage(class) < 90,
+                   'bg-red-500': getOccupancyPercentage(class) >= 90
+                 }"
+                 [style.width.%]="getOccupancyPercentage(class)">
+            </div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex space-x-2">
+          <button
+            (click)="deleteClass(class.id)"
+            class="flex-1 bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 text-sm touch-feedback"
+          >
+            Eliminar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

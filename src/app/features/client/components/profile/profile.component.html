@@ -1,0 +1,122 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div>
+    <h1 class="text-2xl font-bold text-secondary-800">Mi Perfil</h1>
+    <p class="mt-1 text-sm text-secondary-600">
+      Gestiona tu información personal
+    </p>
+  </div>
+
+  <!-- Profile Form -->
+  <div class="card max-w-2xl">
+    <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="space-y-6">
+      <!-- Profile Photo -->
+      <div class="flex items-center space-x-6">
+        <div class="flex-shrink-0">
+          <div class="h-20 w-20 rounded-full bg-primary-500 flex items-center justify-center">
+            <span class="text-2xl font-medium text-white">
+              {{ currentUser?.name }}
+            </span>
+          </div>
+        </div>
+        <div>
+          <h3 class="text-lg font-medium text-secondary-800">{{ currentUser?.name }}</h3>
+          <p class="text-sm text-secondary-600">{{ currentUser?.email }}</p>
+          <p class="text-xs text-secondary-500 mt-1">
+            Miembro desde {{ currentUser?.registrationDate | date:'MMMM yyyy':'es' }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Form Fields -->
+      <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+        <!-- Name -->
+        <div class="sm:col-span-2">
+          <label for="name" class="form-label">
+            Nombre completo *
+          </label>
+          <input
+            id="name"
+            type="text"
+            formControlName="name"
+            class="form-input"
+            [class.border-red-500]="name?.invalid && name?.touched"
+            placeholder="Tu nombre completo"
+          />
+          <div *ngIf="name?.invalid && name?.touched" class="mt-1 text-sm text-red-600">
+            <div *ngIf="name?.errors?.['required']">El nombre es requerido</div>
+            <div *ngIf="name?.errors?.['minlength']">El nombre debe tener al menos 2 caracteres</div>
+          </div>
+        </div>
+
+        <!-- Phone -->
+        <div>
+          <label for="phone" class="form-label">
+            Teléfono
+          </label>
+          <input
+            id="phone"
+            type="tel"
+            formControlName="phone"
+            class="form-input"
+            placeholder="+34 666 777 888"
+          />
+        </div>
+
+        <!-- Birth Date -->
+        <div>
+          <label for="birthDate" class="form-label">
+            Fecha de nacimiento
+          </label>
+          <input
+            id="birthDate"
+            type="date"
+            formControlName="birthDate"
+            class="form-input"
+          />
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-3 pt-6 border-t border-neutral-200">
+        <div class="text-center">
+          <div class="text-2xl font-bold text-primary-600">{{ currentUser?.attendanceCount || 0 }}</div>
+          <div class="text-sm text-secondary-600">Clases asistidas</div>
+        </div>
+        <div class="text-center">
+          <div class="text-2xl font-bold"
+               [ngClass]="{
+                 'text-green-600': currentUser?.paymentStatus === 'paid',
+                 'text-yellow-600': currentUser?.paymentStatus === 'pending',
+                 'text-red-600': currentUser?.paymentStatus === 'overdue'
+               }">
+            {{ currentUser?.paymentStatus === 'paid' ? '✓' : 
+               currentUser?.paymentStatus === 'pending' ? '⏳' : '⚠️' }}
+          </div>
+          <div class="text-sm text-secondary-600">Estado de pago</div>
+        </div>
+        <div class="text-center">
+          <div class="text-2xl font-bold text-secondary-600">
+            {{ currentUser?.lastPaymentDate }}
+          </div>
+          <div class="text-sm text-secondary-600">Último pago</div>
+        </div>
+      </div>
+
+      <!-- Submit Button -->
+      <div class="flex justify-end pt-6 border-t border-neutral-200">
+        <button
+          type="submit"
+          [disabled]="profileForm.invalid || isLoading"
+          class="btn-primary touch-feedback disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <div *ngIf="isLoading" class="flex items-center">
+            <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+            Guardando...
+          </div>
+          <span *ngIf="!isLoading">Guardar cambios</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

@@ -1,0 +1,153 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-secondary-800">Gestión de Usuarios</h1>
+      <p class="mt-1 text-sm text-secondary-600">
+        Administra los usuarios del gimnasio
+      </p>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="card">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0 sm:space-x-4">
+      <!-- Search -->
+      <div class="flex-1 max-w-md">
+        <label for="search" class="sr-only">Buscar usuarios</label>
+        <div class="relative">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg class="h-5 w-5 text-secondary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          <input
+            id="search"
+            type="text"
+            [(ngModel)]="searchTerm"
+            (ngModelChange)="onSearchChange()"
+            class="form-input pl-10"
+            placeholder="Buscar por nombre o email..."
+          />
+        </div>
+      </div>
+
+      <!-- Status Filter -->
+      <div class="flex space-x-2">
+        <button
+          *ngFor="let status of [
+            { key: 'all', label: 'Todos' },
+            { key: 'active', label: 'Activos' },
+            { key: 'inactive', label: 'Inactivos' }
+          ]"
+          (click)="filterStatus = status.key; onFilterChange()"
+          class="px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 touch-feedback"
+          [class]="filterStatus === status.key 
+            ? 'bg-primary-500 text-white' 
+            : 'bg-secondary-100 text-secondary-700 hover:bg-secondary-200'"
+        >
+          {{ status.label }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="flex justify-center py-12">
+    <app-loading message="Cargando usuarios..."></app-loading>
+  </div>
+
+  <!-- Users List -->
+  <div *ngIf="!isLoading" class="space-y-4">
+    <!-- Empty State -->
+    <div *ngIf="filteredUsers.length === 0">
+      <app-empty-state
+        title="No se encontraron usuarios"
+        description="No hay usuarios que coincidan con los filtros aplicados."
+        icon="users">
+      </app-empty-state>
+    </div>
+
+    <!-- Users Grid -->
+    <div *ngIf="filteredUsers.length > 0" class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div *ngFor="let user of filteredUsers" class="card hover:shadow-md transition-shadow duration-200">
+        <!-- User Header -->
+        <div class="flex items-center space-x-3 mb-4">
+          <div class="flex-shrink-0">
+            <div class="h-12 w-12 rounded-full bg-primary-500 flex items-center justify-center">
+              <span class="text-lg font-medium text-white">
+                {{ user.name.charAt(0).toUpperCase() }}
+              </span>
+            </div>
+          </div>
+          <div class="flex-1 min-w-0">
+            <h3 class="text-lg font-semibold text-secondary-800 truncate">
+              {{ user.name }}
+            </h3>
+            <p class="text-sm text-secondary-600 truncate">
+              {{ user.email }}
+            </p>
+          </div>
+        </div>
+
+        <!-- User Info -->
+        <div class="space-y-3 mb-4">
+          <div class="flex justify-between items-center">
+            <span class="text-sm text-secondary-600">Estado:</span>
+            <span [ngClass]="getStatusBadgeClass(user)">
+              {{ user.isActive ? 'Activo' : 'Inactivo' }}
+            </span>
+          </div>
+
+          <div class="flex justify-between items-center">
+            <span class="text-sm text-secondary-600">Pago:</span>
+            <span [ngClass]="getPaymentStatusBadgeClass(user.paymentStatus)">
+              {{ getPaymentStatusText(user.paymentStatus) }}
+            </span>
+          </div>
+
+          <div class="flex justify-between items-center">
+            <span class="text-sm text-secondary-600">Asistencias:</span>
+            <span class="text-sm font-medium text-secondary-800">
+              {{ user.attendanceCount }}
+            </span>
+          </div>
+
+          <div *ngIf="user.phone" class="flex justify-between items-center">
+            <span class="text-sm text-secondary-600">Teléfono:</span>
+            <span class="text-sm text-secondary-800">
+              {{ user.phone }}
+            </span>
+          </div>
+
+          <div class="flex justify-between items-center">
+            <span class="text-sm text-secondary-600">Registro:</span>
+            <span class="text-sm text-secondary-800">
+              {{ user.registrationDate | date:'MMM yyyy':'es' }}
+            </span>
+          </div>
+
+          <div *ngIf="user.lastPaymentDate" class="flex justify-between items-center">
+            <span class="text-sm text-secondary-600">Último pago:</span>
+            <span class="text-sm text-secondary-800">
+              {{ user.lastPaymentDate | date:'d MMM yyyy':'es' }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex space-x-2">
+          <button
+            (click)="toggleUserStatus(user)"
+            class="flex-1 text-sm py-2 px-3 rounded-md font-medium transition-colors duration-200 touch-feedback"
+            [class]="user.isActive 
+              ? 'bg-red-100 text-red-700 hover:bg-red-200' 
+              : 'bg-green-100 text-green-700 hover:bg-green-200'"
+          >
+            {{ user.isActive ? 'Desactivar' : 'Activar' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
