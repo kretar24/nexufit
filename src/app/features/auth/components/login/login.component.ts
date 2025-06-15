@@ -28,39 +28,26 @@ export class LoginComponent implements OnInit {
     });
   }
 
-  ngOnInit(): void {
+  ngOnInit() {
     // If already authenticated, redirect
     if (this.authService.isAuthenticated()) {
       this.redirectUser();
     }
   }
 
-  onSubmit(): void {
+  async onSubmit() {
+    debugger;
     if (this.loginForm.valid && !this.isLoading) {
       this.isLoading = true;
       
       try {
-        this.authService.login(this.loginForm.value).subscribe({
-          next: (response) => {
-            this.notificationService.success(
-              'Bienvenido',
-              `Hola ${response.user.name}, has iniciado sesión correctamente.`
-            );
-            this.redirectUser();
-          },
-          error: (error) => {
-            this.notificationService.error(
-              'Error de autenticación',
-              'Credenciales inválidas. Por favor, verifica tu email y contraseña.'
-            );
-            this.isLoading = false;
-          }
-        });
+        const result = await this.authService.login(this.loginForm.value);
+        if (result) {
+          this.redirectUser();
+        }
       } catch (error) {
-        this.notificationService.error(
-          'Error de autenticación',
-          'Credenciales inválidas. Por favor, verifica tu email y contraseña.'
-        );
+        alert('Error al iniciar sesión');
+      } finally {
         this.isLoading = false;
       }
     }

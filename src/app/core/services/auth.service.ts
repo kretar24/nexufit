@@ -2,6 +2,8 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, of } from 'rxjs';
 import { User } from '../interfaces/user.interface';
 import { Router } from '@angular/router';
+import { SupabaseService } from '../../supabase-client';
+
 
 export interface LoginRequest {
   email: string;
@@ -20,33 +22,7 @@ export class AuthService {
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
 
-  // Mock users for demonstration
-  private mockUsers: User[] = [
-    {
-      id: '1',
-      email: 'admin@fitreserva.com',
-      name: 'Admin Principal',
-      role: 'admin',
-      isActive: true,
-      registrationDate: new Date('2024-01-01'),
-      paymentStatus: 'paid',
-      attendanceCount: 0
-    },
-    {
-      id: '2',
-      email: 'cliente@fitreserva.com',
-      name: 'Juan Pérez',
-      phone: '+34 666 777 888',
-      role: 'client',
-      isActive: true,
-      registrationDate: new Date('2024-01-15'),
-      paymentStatus: 'paid',
-      attendanceCount: 12,
-      lastPaymentDate: new Date('2024-01-01')
-    }
-  ];
-
-  constructor(private router: Router) {
+  constructor(private supabase: SupabaseService, private router: Router) {
     // Check for existing session
     const storedUser = localStorage.getItem('currentUser');
     if (storedUser) {
@@ -54,27 +30,21 @@ export class AuthService {
     }
   }
 
-  login(credentials: LoginRequest): Observable<AuthResponse> {
-    // Mock authentication
-    const user = this.mockUsers.find(u => u.email === credentials.email);
-    
-    if (user && this.validatePassword(credentials.password)) {
-      const authResponse: AuthResponse = {
-        user,
-        token: 'mock-jwt-token-' + user.id
-      };
-      
+  async login(credentials: LoginRequest) {
+    const result = await this.supabase.signIn(credentials.email, credentials.password);
+    if (result.error) {
+      console.error(result.error);
+      alert('Error al iniciar sesión');
+    } else {
+      const user = result.data.user;
+      alert('Inicio de sesión exitoso');
       localStorage.setItem('currentUser', JSON.stringify(user));
-      localStorage.setItem('authToken', authResponse.token);
-      this.currentUserSubject.next(user);
-      
-      return of(authResponse);
     }
-    
-    throw new Error('Credenciales inválidas');
+
+    return result;
   }
 
-  logout(): void {
+  logout() {
     localStorage.removeItem('currentUser');
     localStorage.removeItem('authToken');
     this.currentUserSubject.next(null);
