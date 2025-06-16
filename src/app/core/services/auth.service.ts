@@ -19,7 +19,7 @@ export interface AuthResponse {
   providedIn: 'root'
 })
 export class AuthService {
-  private currentUserSubject = new BehaviorSubject<User | null>(null);
+  private currentUserSubject = new BehaviorSubject<any | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
 
   constructor(private supabase: SupabaseService, private router: Router) {
@@ -37,8 +37,19 @@ export class AuthService {
       alert('Error al iniciar sesión');
     } else {
       const user = result.data.user;
+      const companyId = await this.supabase.getUserCompany();
+      const userParams = await this.supabase.getUserParams(companyId);
+      
+      // Guardar toda la información del usuario
+      const userInfo = {
+        ...user,
+        companyId,
+        params: userParams
+      };
+      
+      localStorage.setItem('currentUser', JSON.stringify(userInfo));
+      this.currentUserSubject.next(userInfo);
       alert('Inicio de sesión exitoso');
-      localStorage.setItem('currentUser', JSON.stringify(user));
     }
 
     return result;

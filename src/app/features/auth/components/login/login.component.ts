@@ -36,7 +36,6 @@ export class LoginComponent implements OnInit {
   }
 
   async onSubmit() {
-    debugger;
     if (this.loginForm.valid && !this.isLoading) {
       this.isLoading = true;
       
