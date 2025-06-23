@@ -23,7 +23,7 @@ export interface ClassPeriodicity {
   companyId: string;
   createdAt: string;
 }
-
+//Interfaz para las clases
 export interface Class {
   id: string;
   name: string;
