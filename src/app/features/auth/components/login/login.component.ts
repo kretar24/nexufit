@@ -53,8 +53,9 @@ export class LoginComponent implements OnInit {
   }
 
   private redirectUser(): void {
-    const user = this.authService.getCurrentUser();
-    if (user?.role === 'admin') {
+    debugger;
+    const isAdmin = localStorage.getItem('AdminUser');
+    if (isAdmin === 'true') {
       this.router.navigate(['/admin/dashboard']);
     } else {
       this.router.navigate(['/client/dashboard']);

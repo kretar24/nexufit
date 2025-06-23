@@ -12,6 +12,7 @@ export class SupabaseService {
   })
 
   private supabase: SupabaseClient;
+  client: any;
 
   constructor() {
     this.supabase = createClient(

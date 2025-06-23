@@ -30,6 +30,8 @@ export class AuthService {
     }
   }
 
+  
+
   async login(credentials: LoginRequest) {
     const result = await this.supabase.signIn(credentials.email, credentials.password);
     if (result.error) {
@@ -39,6 +41,8 @@ export class AuthService {
       const user = result.data.user;
       const companyId = await this.supabase.getUserCompany();
       const userParams = await this.supabase.getUserParams(companyId);
+      localStorage.setItem('companyId', companyId.toString());
+      localStorage.setItem('AdminUser', userParams[0].adminuser)
       
       // Guardar toda la información del usuario
       const userInfo = {
@@ -71,8 +75,8 @@ export class AuthService {
   }
 
   isAdmin(): boolean {
-    const user = this.getCurrentUser();
-    return user?.role === 'admin' || false;
+    const isAdmin = localStorage.getItem('AdminUser');
+    return isAdmin === 'true' || false;
   }
 
   private validatePassword(password: string): boolean {

@@ -17,7 +17,35 @@
 
   <!-- Create Class Form -->
   <div *ngIf="showCreateForm" class="card">
-    <h3 class="text-lg font-semibold text-secondary-800 mb-4">Crear Nueva Clase</h3>
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-lg font-semibold text-secondary-800">Crear Nueva Clase</h3>
+      
+      <!-- Mode Toggle -->
+      <div class="flex rounded-lg bg-neutral-100 p-1">
+        <button
+          type="button"
+          (click)="setFormMode('single')"
+          class="px-3 py-1 text-sm font-medium rounded-md transition-colors"
+          [ngClass]="{
+            'bg-white text-primary-600 shadow-sm': formMode === 'single',
+            'text-secondary-600 hover:text-secondary-800': formMode !== 'single'
+          }"
+        >
+          Clase Individual
+        </button>
+        <button
+          type="button"
+          (click)="setFormMode('periodicity')"
+          class="px-3 py-1 text-sm font-medium rounded-md transition-colors"
+          [ngClass]="{
+            'bg-white text-primary-600 shadow-sm': formMode === 'periodicity',
+            'text-secondary-600 hover:text-secondary-800': formMode !== 'periodicity'
+          }"
+        >
+          Periodicidad
+        </button>
+      </div>
+    </div>
     
     <form [formGroup]="createClassForm" (ngSubmit)="onSubmit()" class="space-y-4">
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -55,8 +83,8 @@
           </div>
         </div>
 
-        <!-- Date -->
-        <div>
+        <!-- Single Class Date -->
+        <div *ngIf="formMode === 'single'">
           <label for="date" class="form-label">Fecha *</label>
           <input
             id="date"
@@ -67,6 +95,65 @@
           />
           <div *ngIf="date?.invalid && date?.touched" class="mt-1 text-sm text-red-600">
             <div *ngIf="date?.errors?.['required']">La fecha es requerida</div>
+          </div>
+        </div>
+
+        <!-- Periodicity Date Range -->
+        <div *ngIf="formMode === 'periodicity'" class="sm:col-span-2">
+          <label class="form-label">Rango de fechas *</label>
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <label for="startDate" class="text-sm text-secondary-600">Fecha de inicio</label>
+              <input
+                id="startDate"
+                type="date"
+                formControlName="startDate"
+                class="form-input"
+                [class.border-red-500]="startDate?.invalid && startDate?.touched"
+              />
+              <div *ngIf="startDate?.invalid && startDate?.touched" class="mt-1 text-sm text-red-600">
+                <div *ngIf="startDate?.errors?.['required']">La fecha de inicio es requerida</div>
+              </div>
+            </div>
+            <div>
+              <label for="endDate" class="text-sm text-secondary-600">Fecha de fin</label>
+              <input
+                id="endDate"
+                type="date"
+                formControlName="endDate"
+                class="form-input"
+                [class.border-red-500]="endDate?.invalid && endDate?.touched"
+              />
+              <div *ngIf="endDate?.invalid && endDate?.touched" class="mt-1 text-sm text-red-600">
+                <div *ngIf="endDate?.errors?.['required']">La fecha de fin es requerida</div>
+                <div *ngIf="endDate?.errors?.['dateRange']">La fecha de fin debe ser posterior a la de inicio</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Days of Week (only for periodicity) -->
+        <div *ngIf="formMode === 'periodicity'" class="sm:col-span-2">
+          <label class="form-label">Días de la semana *</label>
+          <div class="grid grid-cols-3 gap-2 sm:grid-cols-7">
+            <label *ngFor="let day of daysOfWeek; let i = index" 
+                   class="flex items-center justify-center p-3 border rounded-lg cursor-pointer transition-colors"
+                   [ngClass]="{
+                     'border-primary-500 bg-primary-50 text-primary-700': selectedDays.includes(i + 1),
+                     'border-neutral-300 hover:border-neutral-400': !selectedDays.includes(i + 1)
+                   }">
+              <input
+                type="checkbox"
+                class="sr-only"
+                [checked]="selectedDays.includes(i + 1)"
+                (change)="toggleDay(i + 1)"
+              />
+              <span class="text-sm font-medium">{{ day.short }}</span>
+            </label>
+          </div>
+          <div *ngIf="formMode === 'periodicity' && selectedDays.length === 0 && createClassForm.touched" 
+               class="mt-1 text-sm text-red-600">
+            Selecciona al menos un día de la semana
           </div>
         </div>
 
@@ -115,6 +202,7 @@
             [class.border-red-500]="maxCapacity?.invalid && maxCapacity?.touched"
             min="1"
             max="50"
+            value="18"
           />
           <div *ngIf="maxCapacity?.invalid && maxCapacity?.touched" class="mt-1 text-sm text-red-600">
             <div *ngIf="maxCapacity?.errors?.['required']">La capacidad es requerida</div>
@@ -136,6 +224,17 @@
         ></textarea>
       </div>
 
+      <!-- Periodicity Preview -->
+      <div *ngIf="formMode === 'periodicity' && selectedDays.length > 0 && startDate?.value && endDate?.value" 
+           class="bg-neutral-50 border border-neutral-200 rounded-lg p-4">
+        <h4 class="text-sm font-medium text-secondary-800 mb-2">Vista previa de la periodicidad:</h4>
+        <div class="text-sm text-secondary-600 space-y-1">
+          <p><strong>Días:</strong> {{ getSelectedDaysText() }}</p>
+          <p><strong>Período:</strong> {{ startDate?.value | date:'d MMM yyyy':'es' }} - {{ endDate?.value | date:'d MMM yyyy':'es' }}</p>
+          <p><strong>Total de clases:</strong> {{ calculateTotalClasses() }}</p>
+        </div>
+      </div>
+
       <!-- Submit Button -->
       <div class="flex justify-end space-x-3">
         <button
@@ -147,17 +246,94 @@
         </button>
         <button
           type="submit"
-          [disabled]="createClassForm.invalid || isCreating"
+          [disabled]="!isFormValid() || isCreating"
           class="btn-primary touch-feedback disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <div *ngIf="isCreating" class="flex items-center">
             <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-            Creando...
+            {{ formMode === 'periodicity' ? 'Creando periodicidad...' : 'Creando clase...' }}
           </div>
-          <span *ngIf="!isCreating">Crear Clase</span>
+          <span *ngIf="!isCreating">
+            {{ formMode === 'periodicity' ? 'Crear Periodicidad' : 'Crear Clase' }}
+          </span>
         </button>
       </div>
     </form>
+  </div>
+
+  <!-- Periodicities Section -->
+  <div *ngIf="!isLoading" class="space-y-4">
+    <!-- Periodicities List -->
+    <div *ngIf="periodicities.length > 0">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold text-secondary-800">Periodicidades Activas</h2>
+        <span class="text-sm text-secondary-600">{{ periodicities.length }} periodicidad(es)</span>
+      </div>
+      
+      <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div *ngFor="let periodicity of periodicities" class="card border-l-4 border-l-primary-500">
+          <div class="flex justify-between items-start mb-3">
+            <div>
+              <h3 class="text-lg font-semibold text-secondary-800">{{ periodicity.name }}</h3>
+              <p class="text-sm text-secondary-600">{{ periodicity.instructorName }}</p>
+            </div>
+            <span class="text-xs font-medium px-2 py-1 bg-primary-100 text-primary-800 rounded-full">
+              Periodicidad
+            </span>
+          </div>
+
+          <div class="space-y-2 mb-4">
+            <div class="flex items-center text-sm text-secondary-600">
+              <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              {{ formatDaysOfWeek(periodicity.daysOfWeek) }}
+            </div>
+            <div class="flex items-center text-sm text-secondary-600">
+              <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {{ periodicity.startTime }} ({{ calculateDuration(periodicity.startTime, periodicity.endTime) }} min)
+            </div>
+            <div class="flex items-center text-sm text-secondary-600">
+              <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+              Capacidad: {{ periodicity.maxCapacity }} personas
+            </div>
+            <div class="flex items-center text-sm text-secondary-600">
+              <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              {{ periodicity.startDate | date:'d MMM':'es' }} - {{ periodicity.endDate | date:'d MMM yyyy':'es' }}
+            </div>
+          </div>
+
+          <div class="mb-4" *ngIf="periodicity.description">
+            <p class="text-sm text-secondary-600">{{ periodicity.description }}</p>
+          </div>
+
+          <div class="flex space-x-2">
+            <button
+              (click)="togglePeriodicityStatus(periodicity.id)"
+              class="flex-1 font-medium py-2 px-4 rounded-lg transition-colors duration-200 text-sm touch-feedback"
+              [ngClass]="{
+                'bg-yellow-500 hover:bg-yellow-600 text-white': periodicity.status === 'active',
+                'bg-green-500 hover:bg-green-600 text-white': periodicity.status === 'inactive'
+              }"
+            >
+              {{ periodicity.status === 'active' ? 'Pausar' : 'Activar' }}
+            </button>
+            <button
+              (click)="deletePeriodicity(periodicity.id)"
+              class="flex-1 bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 text-sm touch-feedback"
+            >
+              Eliminar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Loading State -->
@@ -168,10 +344,10 @@
   <!-- Classes List -->
   <div *ngIf="!isLoading" class="space-y-4">
     <!-- Empty State -->
-    <div *ngIf="classes.length === 0">
+    <div *ngIf="classes.length === 0 && periodicities.length === 0">
       <app-empty-state
         title="No hay clases programadas"
-        description="Comienza creando tu primera clase."
+        description="Comienza creando tu primera clase o periodicidad."
         icon="calendar">
         <button (click)="toggleCreateForm()" class="btn-primary touch-feedback">
           Crear Primera Clase
@@ -180,72 +356,101 @@
     </div>
 
     <!-- Classes Grid -->
-    <div *ngIf="classes.length > 0" class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-      <div *ngFor="let class of classes" class="card hover:shadow-md transition-shadow duration-200">
-        <!-- Class Header -->
-        <div class="flex justify-between items-start mb-3">
-          <div>
-            <h3 class="text-lg font-semibold text-secondary-800">{{ class.name }}</h3>
-            <p class="text-sm text-secondary-600">{{ class.instructorName }}</p>
-          </div>
-          <span class="text-xs font-medium px-2 py-1 rounded-full"
-                [ngClass]="{
-                  'bg-green-100 text-green-800': getOccupancyPercentage(class) < 70,
-                  'bg-yellow-100 text-yellow-800': getOccupancyPercentage(class) >= 70 && getOccupancyPercentage(class) < 90,
-                  'bg-red-100 text-red-800': getOccupancyPercentage(class) >= 90
-                }">
-            {{ class.currentCapacity }}/{{ class.maxCapacity }}
-          </span>
-        </div>
-
-        <!-- Class Info -->
-        <div class="space-y-2 mb-4">
-          <div class="flex items-center text-sm text-secondary-600">
-            <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            {{ class.date | date:'EEEE, d MMMM yyyy':'es' }}
-          </div>
-          <div class="flex items-center text-sm text-secondary-600">
-            <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            {{ class.startTime }} ({{ class.duration }} min)
-          </div>
-        </div>
-
-        <div class="mb-4" *ngIf="class.description">
-          <p class="text-sm text-secondary-600">{{ class.description }}</p>
-        </div>
-
-        <!-- Occupancy Bar -->
-        <div class="mb-4">
-          <div class="flex justify-between text-xs text-secondary-600 mb-1">
-            <span>Ocupación</span>
-            <span [ngClass]="getOccupancyColor(getOccupancyPercentage(class))">
-              {{ getOccupancyPercentage(class) }}%
-            </span>
-          </div>
-          <div class="w-full bg-neutral-200 rounded-full h-2">
-            <div class="h-2 rounded-full transition-all duration-300"
-                 [ngClass]="{
-                   'bg-green-500': getOccupancyPercentage(class) < 70,
-                   'bg-yellow-500': getOccupancyPercentage(class) >= 70 && getOccupancyPercentage(class) < 90,
-                   'bg-red-500': getOccupancyPercentage(class) >= 90
-                 }"
-                 [style.width.%]="getOccupancyPercentage(class)">
+    <div *ngIf="classes.length > 0">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold text-secondary-800">Próximas Clases</h2>
+        <span class="text-sm text-secondary-600">{{ classes.length }} clase(s)</span>
+      </div>
+      
+      <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div *ngFor="let class of classes" class="card hover:shadow-md transition-shadow duration-200">
+          <!-- Class Header -->
+          <div class="flex justify-between items-start mb-3">
+            <div>
+              <h3 class="text-lg font-semibold text-secondary-800">{{ class.name }}</h3>
+              <p class="text-sm text-secondary-600">{{ class.instructorName }}</p>
+            </div>
+            <div class="flex flex-col items-end space-y-1">
+              <span class="text-xs font-medium px-2 py-1 rounded-full"
+                    [ngClass]="{
+                      'bg-green-100 text-green-800': getOccupancyPercentage(class) < 70,
+                      'bg-yellow-100 text-yellow-800': getOccupancyPercentage(class) >= 70 && getOccupancyPercentage(class) < 90,
+                      'bg-red-100 text-red-800': getOccupancyPercentage(class) >= 90
+                    }">
+                {{ class.currentEnrollments }}/{{ class.maxCapacity }}
+              </span>
+              <span *ngIf="class.periodicityId" class="text-xs font-medium px-2 py-1 bg-blue-100 text-blue-800 rounded-full">
+                Recurrente
+              </span>
             </div>
           </div>
-        </div>
 
-        <!-- Actions -->
-        <div class="flex space-x-2">
-          <button
-            (click)="deleteClass(class.id)"
-            class="flex-1 bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 text-sm touch-feedback"
-          >
-            Eliminar
-          </button>
+          <!-- Class Info -->
+          <div class="space-y-2 mb-4">
+            <div class="flex items-center text-sm text-secondary-600">
+              <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              {{ class.classDate | date:'EEEE, d MMMM yyyy':'es' }}
+            </div>
+            <div class="flex items-center text-sm text-secondary-600">
+              <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {{ class.startTime }} - {{ class.endTime }}
+            </div>
+            <div class="flex items-center text-sm text-secondary-600">
+              <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Estado: <span [ngClass]="{
+                'text-green-600': class.status === 'scheduled',
+                'text-red-600': class.status === 'cancelled',
+                'text-blue-600': class.status === 'completed'
+              }">{{ getStatusText(class.status) }}</span>
+            </div>
+          </div>
+
+          <div class="mb-4" *ngIf="class.description">
+            <p class="text-sm text-secondary-600">{{ class.description }}</p>
+          </div>
+
+          <!-- Occupancy Bar -->
+          <div class="mb-4">
+            <div class="flex justify-between text-xs text-secondary-600 mb-1">
+              <span>Ocupación</span>
+              <span [ngClass]="getOccupancyColor(getOccupancyPercentage(class))">
+                {{ getOccupancyPercentage(class) }}%
+              </span>
+            </div>
+            <div class="w-full bg-neutral-200 rounded-full h-2">
+              <div class="h-2 rounded-full transition-all duration-300"
+                   [ngClass]="{
+                     'bg-green-500': getOccupancyPercentage(class) < 70,
+                     'bg-yellow-500': getOccupancyPercentage(class) >= 70 && getOccupancyPercentage(class) < 90,
+                     'bg-red-500': getOccupancyPercentage(class) >= 90
+                   }"
+                   [style.width.%]="getOccupancyPercentage(class)">
+              </div>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex space-x-2">
+            <button
+              *ngIf="class.status === 'scheduled'"
+              (click)="cancelClass(class.id)"
+              class="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 text-sm touch-feedback"
+            >
+              Cancelar
+            </button>
+            <button
+              (click)="deleteClass(class.id)"
+              class="flex-1 bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 text-sm touch-feedback"
+            >
+              Eliminar
+            </button>
+          </div>
         </div>
       </div>
     </div>
